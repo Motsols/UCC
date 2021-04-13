@@ -6,6 +6,7 @@ using UnityEngine.InputSystem;
 
 
 [RequireComponent(typeof(PlayerInput))]
+[RequireComponent(typeof(CapsuleCollider))]
 public class PlayerController : MonoBehaviour
 {
     /* Exposing fields to the components editor UI is as simple as marking it as declaring it public, or better yet [SerializeField] since it does not require the field to be public to other classes.
@@ -24,6 +25,8 @@ public class PlayerController : MonoBehaviour
     float RotationSpeed = 360f;
 
     #endregion
+
+    CapsuleCollider Collider;
 
 
     //Pending Input Vector to be handled next update
@@ -55,7 +58,22 @@ public class PlayerController : MonoBehaviour
 
     private void Awake()
     {
+        /* We require a capsule collider for our character. We have made sure there is one by adding [RequireComponent(typeof(CapsuleCollider))]
+         * But to avoid having to iterate all components every time we want to communicate with our Collider we Cache it
+         * For a collider this might not be strictly necessary since it uses the Unity Message system to notify us when it collides with something. See OnCollisionEnter
+         * But this is good practice for communicating between compononents, especially for a "management" component like our PlayerController
+         */
+        Collider = GetComponent<CapsuleCollider>();
 
+
+        /* We might want to communicate with a component further down (or up) in the GameObject Hierachy.
+         * Collider = GetComponentInChildren<CapsuleCollider>();
+         * Collider = GetComponentInParent<CapsuleCollider>();
+         * For Multiple Components
+        CapsuleCollider[] colliders = GetComponents<CapsuleCollider>();
+        CapsuleCollider[] colliders = GetComponentsInChildren<CapsuleCollider>();
+        CapsuleCollider[] colliders = GetComponentInParent<CapsuleCollider>();
+        */
     }
 
 
@@ -99,7 +117,7 @@ public class PlayerController : MonoBehaviour
 
 
 #if UNITY_EDITOR
-
+            //Cache hit location as LookAtLocation for debug purposes
             LookAtLocation = planeHitLocation;
 
 #endif
@@ -188,5 +206,10 @@ public class PlayerController : MonoBehaviour
         Gizmos.DrawSphere(LookAtLocation, .5f);
 
 #endif
+    }
+
+    private void OnCollisionEnter(Collision collision)
+    {
+        //Do Collision Logic here
     }
 }
