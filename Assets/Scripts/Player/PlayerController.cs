@@ -7,6 +7,7 @@ using UnityEngine.InputSystem;
 
 [RequireComponent(typeof(PlayerInput))]
 [RequireComponent(typeof(CapsuleCollider))]
+[RequireComponent(typeof(SnowballThrower))]
 public class PlayerController : MonoBehaviour
 {
     /* Exposing fields to the components editor UI is as simple as marking it as declaring it public, or better yet [SerializeField] since it does not require the field to be public to other classes.
@@ -24,17 +25,26 @@ public class PlayerController : MonoBehaviour
     [SerializeField]
     float RotationSpeed = 360f;
 
+    //GameObject transform component to use as the spawning point for our snowballs
+    [SerializeField]
+    GameObject SnowballAnchor;
+
     #endregion
 
-    CapsuleCollider Collider;
+    //Reference to our Collider
+    CapsuleCollider ColliderComponent;
 
+    //Component responsible for creating and throwing snowballs
+    SnowballThrower SnowballThrowerComponent;
+
+   
+    
 
     //Pending Input Vector to be handled next update
     Vector2 PendingInputVector;
 
     //Our previous input vector from last frame. Useful for checking things like if we started movement this frame
     Vector2 PreviousInputVector;
-
 
     //Current Mouse Position
     Vector2 MousePosition;
@@ -50,8 +60,14 @@ public class PlayerController : MonoBehaviour
 #endif
 
 
-    //Flag for Aiming
+    //Bool Property for Aim Input. True While Aim is Held Down
     public bool bAiming { get; private set; }
+
+    //Bool Property for Fire Input, True While Fire is Held Down
+    public bool bFire { get; private set; }
+
+    //The Time the Fire Input has Been Held Down
+    public float FireHeldDuration { get; private set; }
 
     //Current Velocity for Our Player Character
     public Vector3 Velocity { get; private set; }
@@ -63,7 +79,7 @@ public class PlayerController : MonoBehaviour
          * For a collider this might not be strictly necessary since it uses the Unity Message system to notify us when it collides with something. See OnCollisionEnter
          * But this is good practice for communicating between compononents, especially for a "management" component like our PlayerController
          */
-        Collider = GetComponent<CapsuleCollider>();
+        ColliderComponent = GetComponent<CapsuleCollider>();
 
 
         /* We might want to communicate with a component further down (or up) in the GameObject Hierachy.
@@ -74,6 +90,8 @@ public class PlayerController : MonoBehaviour
         CapsuleCollider[] colliders = GetComponentsInChildren<CapsuleCollider>();
         CapsuleCollider[] colliders = GetComponentInParent<CapsuleCollider>();
         */
+
+        SnowballThrowerComponent = GetComponent<SnowballThrower>();
     }
 
 
@@ -148,16 +166,64 @@ public class PlayerController : MonoBehaviour
     public void OnAimInput(InputAction.CallbackContext context) 
     {
         bAiming = context.ReadValueAsButton();
-        Debug.Log("bAiming: " + bAiming);
+        //Debug.Log("bAiming: " + bAiming);
     }
 
     public void OnMousePositionChange(InputAction.CallbackContext context)
     {
         MousePosition = context.ReadValue<Vector2>();
-        Debug.Log("Mouse Position: " + MousePosition);
+        //Debug.Log("Mouse Position: " + MousePosition);
+    }
+
+    public void OnFire(InputAction.CallbackContext context) 
+    {
+        bFire = context.ReadValueAsButton();
+        //Debug.Log("bFire: " + bFire);
+
+        if (!bFire) { return; }
+
+        if (SnowballThrowerComponent.bSnowballIsReady) 
+        {
+            Debug.Log("Starting ChargeSnowball Coroutine");
+            StartCoroutine("ChargeSnowball");
+        }
+        else if(!SnowballThrowerComponent.bIsCreatingSnowball)
+        {
+            Debug.Log("Starting Snowball Packing");
+            SnowballThrowerComponent.CreateSnowball(SnowballAnchor.transform);
+        }
+        else 
+        {
+            Debug.Log("Snowball is being created");
+        }
     }
 
 #endregion
+
+    //Coroutine for charging a snowball throw
+    //See SnowballThrower for coroutine example
+    IEnumerator ChargeSnowball() 
+    {
+        float FireHeldDuration = 0f;
+        while (bFire)
+        {
+            FireHeldDuration += Time.deltaTime;
+            Debug.Log("Chargine Snowball: " + FireHeldDuration + " seconds");
+            yield return null;
+        }
+
+        if (SnowballThrowerComponent.bSnowballIsReady) 
+        {
+            Debug.Log("Throwing Snowball, Changed for: " + FireHeldDuration + " seconds");
+            SnowballThrowerComponent.ThrowSnowball(transform.forward, FireHeldDuration);
+        }
+        else 
+        {
+            Debug.LogWarning("Failed to throw snowball after charging. Thrower snowball is not ready");
+        }
+    }
+
+
 
     //Try to move the game object (actually the transform component on the game object) using the Pending Movement Input (PendingInputVector)
     //Return false if we did not move
