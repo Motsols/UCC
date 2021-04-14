@@ -178,7 +178,7 @@ public class SnowballThrower : MonoBehaviour
             return false;
         }
 
-        transform.SetParent(null);
+        CurrentSnowBall.gameObject.transform.SetParent(null);
 
         bHasSnowball = false;
         bSnowballIsReady = false;
