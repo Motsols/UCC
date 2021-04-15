@@ -9,6 +9,10 @@ public class SnowballThrower : MonoBehaviour
     [SerializeField]
     SnowBall SnowballPrefab;
 
+    //GameObject transform component to use as the spawning point for our snowballs
+    [SerializeField]
+    GameObject SnowballAnchor;
+
     //The pitch (up down) we launch our snowball at.
     //float If 0 we launch it straight ahead, 1 straight up, -1 straight down.
     [SerializeField, Range(-1f, 1f)]
@@ -26,6 +30,8 @@ public class SnowballThrower : MonoBehaviour
     //An upper ceiling for SnowballForceMultiplier so it can't get completely out of hand
     [SerializeField]
     float MaxSnowballForceMultiplier = 10000f;
+
+
 
     #endregion
 
@@ -99,8 +105,14 @@ public class SnowballThrower : MonoBehaviour
 
     //Create a new snowball, will fail if we already have a snowball.
     //Attaches the snowball to a GameObject transform so the snowball will be attached until we throw it
-    public bool CreateSnowball(Transform attachmentPoint) 
+    public bool CreateSnowball() 
     {
+        if(SnowballAnchor == null) 
+        {
+            Debug.LogError("No Snowball Anchor has been set for the snowball thrower");
+            return false;
+        }
+
         if (!Initialized) 
         {
             Debug.LogError("Unable to create snowball. Snowball prefab not set");
@@ -121,7 +133,7 @@ public class SnowballThrower : MonoBehaviour
             Debug.LogError("Failed to Create Snowball");
             Destroy(CurrentSnowBall);
         }
-        CurrentSnowBall.transform.SetParent(attachmentPoint);
+        CurrentSnowBall.transform.SetParent(SnowballAnchor.transform);
         CurrentSnowBall.transform.localPosition = Vector3.zero;
         CurrentSnowBall.transform.localRotation = Quaternion.identity;
 

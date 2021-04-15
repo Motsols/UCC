@@ -25,10 +25,6 @@ public class PlayerController : MonoBehaviour
     [SerializeField]
     float RotationSpeed = 360f;
 
-    //GameObject transform component to use as the spawning point for our snowballs
-    [SerializeField]
-    GameObject SnowballAnchor;
-
     #endregion
 
     //Reference to our Collider
@@ -190,7 +186,7 @@ public class PlayerController : MonoBehaviour
         else if(!SnowballThrowerComponent.bIsCreatingSnowball)
         {
             Debug.Log("Starting Snowball Packing");
-            SnowballThrowerComponent.CreateSnowball(SnowballAnchor.transform);
+            SnowballThrowerComponent.CreateSnowball();
         }
         else 
         {
