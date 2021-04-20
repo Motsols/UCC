@@ -22,4 +22,9 @@ public class MonoBehaviourSingleton<T>:MonoBehaviour where T:MonoBehaviourSingle
             Instance = (T)this;
         }
     }
+
+    void OnDestroy()
+    {
+        Instance = null;   
+    }
 }

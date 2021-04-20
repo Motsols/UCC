@@ -616,6 +616,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 8417688850520128324, guid: d162f4e86999fc04f8ba8f5ba57f4fcd, type: 3}
+      propertyPath: SnowballForceMultiplier
+      value: 50
+      objectReference: {fileID: 0}
     - target: {fileID: 8417688850520128382, guid: d162f4e86999fc04f8ba8f5ba57f4fcd, type: 3}
       propertyPath: m_Name
       value: Character

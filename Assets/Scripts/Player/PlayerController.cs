@@ -19,56 +19,56 @@ public class PlayerController : MonoBehaviour
 
     //Movement Speed in Meters/s
     [SerializeField]
-    float MovementSpeed = 4f;
+    protected float MovementSpeed = 4f;
 
     //Rotation Speed in Degrees/s
     [SerializeField]
-    float RotationSpeed = 360f;
+    protected float RotationSpeed = 360f;
 
     #endregion
 
     //Reference to our Collider
-    CapsuleCollider ColliderComponent;
+    protected CapsuleCollider ColliderComponent;
 
     //Component responsible for creating and throwing snowballs
-    SnowballThrower SnowballThrowerComponent;
+    protected SnowballThrower SnowballThrowerComponent;
 
    
     
 
     //Pending Input Vector to be handled next update
-    Vector2 PendingInputVector;
+    protected Vector2 PendingInputVector;
 
     //Our previous input vector from last frame. Useful for checking things like if we started movement this frame
-    Vector2 PreviousInputVector;
+    protected Vector2 PreviousInputVector;
 
     //Current Mouse Position
-    Vector2 MousePosition;
+    protected Vector2 MousePosition;
 
     //Our Character Desired Look At Rotation
-    Quaternion DesiredRotation;
+    protected Quaternion DesiredRotation;
 
 //Preprocessor Macro for Fields that are only every used in the editor
 #if UNITY_EDITOR
 
-    Vector3 LookAtLocation;
+    protected Vector3 LookAtLocation;
 
 #endif
 
 
     //Bool Property for Aim Input. True While Aim is Held Down
-    public bool bAiming { get; private set; }
+    public bool bAiming { get; protected set; }
 
     //Bool Property for Fire Input, True While Fire is Held Down
-    public bool bFire { get; private set; }
+    public bool bFire { get; protected set; }
 
     //The Time the Fire Input has Been Held Down
-    public float FireHeldDuration { get; private set; }
+    public float FireHeldDuration { get; protected set; }
 
     //Current Velocity for Our Player Character
-    public Vector3 Velocity { get; private set; }
+    public Vector3 Velocity { get; protected set; }
 
-    private void Awake()
+    protected void Awake()
     {
         /* We require a capsule collider for our character. We have made sure there is one by adding [RequireComponent(typeof(CapsuleCollider))]
          * But to avoid having to iterate all components every time we want to communicate with our Collider we Cache it
@@ -91,17 +91,11 @@ public class PlayerController : MonoBehaviour
     }
 
 
-    // Start is called before the first frame update
-    void Start()
-    {
 
-    }
-
-    // Update is called once per frame
-    void Update()
+    protected void UpdateAim()
     {
         //bAiming bool is set by "Aim" input, meaning we only rotate our character while we are holding the right mouse button
-        if (bAiming) 
+        if (bAiming)
         {
             /*  To find out where we are aiming we create a plane and fire a ray from our camera towards it. This gives us an intersection point in world space.
              *  The intersection point is where we want our character to look. With a little math we can calculate a "look at" rotation from this, meaning the rotation our character should have to look at this point
@@ -114,7 +108,7 @@ public class PlayerController : MonoBehaviour
 
             //We define a plane which will function as the collision plane for our raycast. The Plane is always level with the world coodinate system (vector3.up = {0,1,0}) and offset it to our current position
             //Since we are only currently moving in 2D we could just use a hardcoded 0, but this gives us the same functionality if we put in move vertical movement
-            Plane projectionPlane = new Plane(Vector3.up,transform.position);
+            Plane projectionPlane = new Plane(Vector3.up, transform.position);
 
             //The ray describes the raycast orgin and direction
             Ray projectionRay = Camera.main.ScreenPointToRay(MousePosition);
@@ -123,7 +117,7 @@ public class PlayerController : MonoBehaviour
             float distance = 0f;
 
             //We "shoot" a ray from our camera to intersect with our place. We get a success bool returned and also the distance from the camera where the ray intersects the plane
-            if(projectionPlane.Raycast(projectionRay,out distance))
+            if (projectionPlane.Raycast(projectionRay, out distance))
             {
                 //Get the vector intersecting our ray at the raycast hit distance
                 planeHitLocation = projectionRay.GetPoint(distance);
@@ -139,19 +133,32 @@ public class PlayerController : MonoBehaviour
             DesiredRotation = Quaternion.LookRotation(direction);
 
             //rotate us over time according to speed until we are in the required rotation
-            transform.rotation = Quaternion.Slerp(transform.rotation, DesiredRotation, Time.deltaTime * (Mathf.Deg2Rad*RotationSpeed));
+            transform.rotation = Quaternion.Slerp(transform.rotation, DesiredRotation, Time.deltaTime * (Mathf.Deg2Rad * RotationSpeed));
         }
+    }
 
-        if (PendingInputVector.SqrMagnitude() > 0) 
+    protected void UpdateMovement()
+    {
+        if (PendingInputVector.SqrMagnitude() > 0)
         {
-            if (!TryMove()) 
+            if (!TryMove())
             {
                 Debug.Log("Failed To Move");
             }
         }
     }
 
-#region INPUT HANDLERS
+    // Update is called once per frame
+    protected virtual void Update()
+    {
+        UpdateAim();
+
+
+        UpdateMovement();
+
+    }
+
+    #region INPUT HANDLERS
 
     public void OnMovementInput(InputAction.CallbackContext context) 
     {
